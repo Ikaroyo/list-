@@ -1,0 +1,587 @@
+```html
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Precios Depósito - Catálogo Completo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'media',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 h-full flex flex-col antialiased">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-brand-600 text-white p-2.5 rounded-xl shadow-md">
+                    <i class="fa-solid fa-warehouse text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-900 text-base sm:text-lg leading-tight">Depósito Central</h1>
+                    <p class="text-xs text-slate-500">Lista #1 • Fecha: 15/08/2026</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <!-- Cart Button -->
+                <button onclick="toggleCartModal(true)" class="relative bg-brand-50 hover:bg-brand-100 text-brand-700 px-4 py-2 rounded-xl font-medium transition flex items-center space-x-2 border border-brand-200">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span class="hidden sm:inline">Pedido</span>
+                    <span id="cart-badge" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-bold shadow-md hidden">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col">
+        
+        <!-- Controls & Filters -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6 space-y-4">
+            <div class="flex flex-col md:flex-row gap-3 items-center justify-between">
+                <!-- Search Box -->
+                <div class="relative w-full md:w-96">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
+                    <input type="text" id="search-input" oninput="filterProducts()" placeholder="Buscar por código, Sardo, Molinos..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white text-sm transition">
+                </div>
+
+                <!-- Categories Filter Bar -->
+                <div class="w-full md:w-auto overflow-x-auto pb-1 md:pb-0 flex items-center space-x-2 no-scrollbar" id="category-filters">
+                    <button onclick="setCategory('TODOS')" class="category-btn active px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap bg-brand-600 text-white shadow-sm transition">Todos</button>
+                    <button onclick="setCategory('ALIMENTOS')" class="category-btn px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200 transition">Alimentos</button>
+                    <button onclick="setCategory('FIAMBRES')" class="category-btn px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200 transition">Fiambres y Quesos</button>
+                    <button onclick="setCategory('ALMACEN')" class="category-btn px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200 transition">Art. de Almacén</button>
+                    <button onclick="setCategory('LIMPIEZA')" class="category-btn px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200 transition">Limpieza</button>
+                    <button onclick="setCategory('PERFUMERIA')" class="category-btn px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200 transition">Perfumería y Art.</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Grid -->
+        <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-20">
+            <!-- Dynamic Cards Rendered Here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="hidden flex-col items-center justify-center py-16 text-center">
+            <div class="bg-slate-100 text-slate-400 p-4 rounded-full text-3xl mb-3">
+                <i class="fa-solid fa-box-open"></i>
+            </div>
+            <h3 class="text-slate-700 font-semibold text-lg">No se encontraron productos</h3>
+            <p class="text-slate-500 text-sm">Intente con otra búsqueda o categoría.</p>
+        </div>
+    </main>
+
+    <!-- Floating Cart Bar for Mobile -->
+    <div id="floating-cart" class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 shadow-lg sm:hidden flex items-center justify-between z-20 translate-y-full transition-transform duration-300">
+        <div>
+            <p class="text-xs text-slate-500 font-medium">Total Estimado</p>
+            <p id="mobile-total" class="text-lg font-bold text-slate-900">$0.00</p>
+        </div>
+        <button onclick="toggleCartModal(true)" class="bg-brand-600 text-white font-semibold px-6 py-2.5 rounded-xl shadow-md flex items-center space-x-2">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span>Ver Pedido</span>
+        </button>
+    </div>
+
+    <!-- Cart Modal / Drawer -->
+    <div id="cart-modal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex justify-end transition-opacity">
+        <div class="bg-white w-full max-w-md h-full flex flex-col shadow-2xl transform translate-x-full transition-transform duration-300" id="cart-drawer">
+            <!-- Modal Header -->
+            <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-file-invoice text-brand-600"></i>
+                    <h2 class="font-bold text-slate-900 text-lg">Resumen del Pedido</h2>
+                </div>
+                <button onclick="toggleCartModal(false)" class="text-slate-400 hover:text-slate-600 p-2 rounded-lg">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Client Info Input -->
+            <div class="p-4 border-b border-slate-100 bg-slate-50/50 space-y-3">
+                <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider">Nombre del Cliente / Local</label>
+                <input type="text" id="client-name" placeholder="Ej. Autoservicio Don Juan" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+
+            <!-- Cart Items List -->
+            <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 divide-y divide-slate-100">
+                <!-- Cart items injected here -->
+            </div>
+
+            <!-- Cart Footer -->
+            <div class="p-4 border-t border-slate-200 bg-slate-50 space-y-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-slate-600 font-medium">Total General:</span>
+                    <span id="cart-total" class="text-xl font-black text-slate-900">$0.00</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="clearCart()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 py-3 rounded-xl font-semibold text-sm transition">
+                        Vaciar
+                    </button>
+                    <button onclick="shareWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-semibold text-sm transition flex items-center justify-center space-x-2 shadow-md shadow-emerald-600/20">
+                        <i class="fa-brands fa-whatsapp text-lg"></i>
+                        <span>Enviar WhatsApp</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl z-50 transform translate-y-20 opacity-0 transition-all duration-300 flex items-center space-x-2 text-sm font-medium">
+        <i class="fa-solid fa-circle-check text-brand-500"></i>
+        <span id="toast-message">Producto agregado al pedido</span>
+    </div>
+
+    <!-- Script Data & Logic -->
+    <script>
+        // Catálogo completo extraído íntegramente del depósito
+        const products = [
+            // ALIMENTOS
+            { code: "2.11.06", name: "CEREALES X 8", category: "ALIMENTOS", price: 10700.00 },
+            { code: "2.24.5", name: "COMPANY ADULTO X 20", category: "ALIMENTOS", price: 35500.00 },
+            { code: "2.24.6", name: "COMPANY CACHORRO X 20", category: "ALIMENTOS", price: 41000.03 },
+            { code: "2.24.15", name: "COMPANY GATO X 15", category: "ALIMENTOS", price: 51500.00 },
+            { code: "2.37.6", name: "FAWNA ADULTO R/PEQUEÑA X 7.5", category: "ALIMENTOS", price: 49100.00 },
+            { code: "2.37.9", name: "FAWNA ADULTO X 15", category: "ALIMENTOS", price: 85500.00 },
+            { code: "2.37.4", name: "FAWNA CACHORRO X 15", category: "ALIMENTOS", price: 88650.00 },
+            { code: "2.37.19", name: "FAWNA GATO ADULTO X 7.5", category: "ALIMENTOS", price: 66230.00 },
+            { code: "2.6.34", name: "KONGO GOLD ADULTO X 15", category: "ALIMENTOS", price: 37200.00 },
+            { code: "2.6.1", name: "KONGO GOLD ADULTO X 21", category: "ALIMENTOS", price: 49600.01 },
+            { code: "2.6.22", name: "KONGO GOLD CACHORRO X 21", category: "ALIMENTOS", price: 54050.00 },
+            { code: "2.6.38", name: "KONGO GOLD CACHORRO X 8", category: "ALIMENTOS", price: 22300.00 },
+            { code: "2.6.25", name: "KONGO GOLD RAZA PEQUEÑA X 15", category: "ALIMENTOS", price: 39050.00 },
+            { code: "2.5.17", name: "KONGO GOURMET CARNE X 15", category: "ALIMENTOS", price: 49900.00 },
+            { code: "2.22.2", name: "KONGO GOURMET KITTEN X 8", category: "ALIMENTOS", price: 29300.00 },
+            { code: "2.5.22", name: "KONGO GOURMET SALMON X 15", category: "ALIMENTOS", price: 49900.00 },
+            { code: "2.3.12", name: "KONGO RAZA PEQUEÑA X 15", category: "ALIMENTOS", price: 29900.00 },
+            { code: "2.3.14", name: "KONGO RAZA PEQUEÑA X 8", category: "ALIMENTOS", price: 16700.00 },
+            { code: "2.2.21", name: "KONGO TRADICIONAL ADULTO X 21", category: "ALIMENTOS", price: 37600.00 },
+            { code: "2.2.28", name: "KONGO TRADICIONAL ADULTO X 8", category: "ALIMENTOS", price: 15800.00 },
+            { code: "2.4.15", name: "KONGO TRADICIONAL CACHORRO X 21", category: "ALIMENTOS", price: 44400.00 },
+            { code: "2.4.21", name: "KONGO TRADICIONAL CACHORRO X 8", category: "ALIMENTOS", price: 18500.05 },
+            { code: "2.19.47", name: "MAINTENANCE CACHORRO CORDERO X 15", category: "ALIMENTOS", price: 42000.00 },
+            { code: "2.19.43", name: "MAINTENANCE CORDERO ADULTO X 21", category: "ALIMENTOS", price: 46700.00 },
+            { code: "2.19.14", name: "MAINTENANCE HIGH PRO X 20", category: "ALIMENTOS", price: 47150.00 },
+            { code: "2.19.1", name: "MAINTENANCE CRI ADULTO X 22", category: "ALIMENTOS", price: 36100.00 },
+            { code: "2.19.35", name: "MAINTENANCE CRI AD R/P X 15", category: "ALIMENTOS", price: 25700.00 },
+            { code: "2.19.2", name: "MAINTENANCE CRI CACHORRO X 15", category: "ALIMENTOS", price: 28700.00 },
+            { code: "2.20.40", name: "MAINTENANCE GATO SALMON X 15", category: "ALIMENTOS", price: 39300.00 },
+            { code: "2.19.55", name: "MAINTENANCE HIGH PRO ADU R/P X 15", category: "ALIMENTOS", price: 36900.00 },
+            { code: "2.11.62", name: "OLD PRINCE CERDO ADULTO 15", category: "ALIMENTOS", price: 56200.00 },
+            { code: "2.11.99", name: "OLD PRINCE CORDERO ADULTO R/P X 7.5", category: "ALIMENTOS", price: 39000.00 },
+            { code: "2.11.101", name: "OLD PRINCE CORDERO ADULTO X 7.5", category: "ALIMENTOS", price: 35500.00 },
+            { code: "2.11.69", name: "OLD PRINCE CORDERO CACHORRO X 15", category: "ALIMENTOS", price: 74500.00 },
+            { code: "2.12.21", name: "OLD PRINCE CORDERO GATO STERILIZED X 7.5", category: "ALIMENTOS", price: 65600.05 },
+            { code: "2.12.18", name: "OLD PRINCE CORDERO GATO X 3", category: "ALIMENTOS", price: 26300.00 },
+            { code: "2.11.65", name: "OLD PRINCE CORDERO GATO X 7.5", category: "ALIMENTOS", price: 58200.00 },
+            { code: "2.12.17", name: "OLD PRINCE CORDERO KITTEN X 3", category: "ALIMENTOS", price: 28900.00 },
+            { code: "2.11.14", name: "OLD PRINCE CORDERO LIGHT X 15", category: "ALIMENTOS", price: 71000.05 },
+            { code: "2.11.67", name: "OLD PRINCE CORDERO R. PEQUEÑA X 15", category: "ALIMENTOS", price: 74500.03 },
+            { code: "2.11.46", name: "OLD PRINCE CORDERO SEÑIOR X 15", category: "ALIMENTOS", price: 71000.05 },
+            { code: "2.11.71", name: "OLD PRINCE CORDERO Y ARROZ X 15", category: "ALIMENTOS", price: 65500.00 },
+            { code: "2.11.97", name: "OLD PRINCE EQUILIBRIUM ADUL POLLO X 7.5", category: "ALIMENTOS", price: 29400.00 },
+            { code: "2.11.87", name: "OLD PRINCE EQUILIBRIUM ADUL R/PEQ X 15", category: "ALIMENTOS", price: 53400.00 },
+            { code: "2.11.89", name: "OLD PRINCE EQUILIBRIUM CACH R PEQ X 7.5", category: "ALIMENTOS", price: 30300.00 },
+            { code: "2.11.88", name: "OLD PRINCE EQUILIBRIUM CACH X 15", category: "ALIMENTOS", price: 50300.00 },
+            { code: "2.12.6", name: "OLD PRINCE EQUILIBRIUM CATS URINARY X 7.5", category: "ALIMENTOS", price: 51700.00 },
+            { code: "2.12.5", name: "OLD PRINCE EQUILIBRIUM CATS X 7.5", category: "ALIMENTOS", price: 45000.00 },
+            { code: "2.11.98", name: "OLD PRINCE EQUILIBRIUM POLLO X 15", category: "ALIMENTOS", price: 47700.00 },
+            { code: "2.11.86", name: "OLD PRINCE EQUILIBRIUM POLLO X 20", category: "ALIMENTOS", price: 59700.00 },
+            { code: "2.11.39", name: "OLD PRINCE PREMIUM ADULTO X 20", category: "ALIMENTOS", price: 49600.05 },
+            { code: "2.9.3", name: "VORAZ CACHORRO X 10", category: "ALIMENTOS", price: 18450.00 },
+            { code: "2.9.2", name: "VORAZ CACHORRO X 20", category: "ALIMENTOS", price: 35900.00 },
+            { code: "2.2.2", name: "VORAZ CACHORRO X 15", category: "ALIMENTOS", price: 28250.00 },
+            { code: "2.8.6", name: "VORAZ GATITO X 15", category: "ALIMENTOS", price: 40150.00 },
+            { code: "2.8.2", name: "VORAZ GATO X 10", category: "ALIMENTOS", price: 23450.00 },
+            { code: "2.8.1", name: "VORAZ GATO X 20", category: "ALIMENTOS", price: 45850.00 },
+            { code: "5296", name: "BONELO X 15", category: "ALIMENTOS", price: 54200.00 },
+            { code: "5279", name: "BONELO GATO X 15", category: "ALIMENTOS", price: 63200.00 },
+            { code: "9127", name: "BONZO ADULTO X 21", category: "ALIMENTOS", price: 38600.00 },
+            { code: "3882", name: "CAT CHOW X 8", category: "ALIMENTOS", price: 49000.00 },
+            { code: "8838", name: "CAT CHOW ESTERILIZADO X 3", category: "ALIMENTOS", price: 21900.00 },
+            { code: "6022", name: "CAT CHOW X 15", category: "ALIMENTOS", price: 89500.00 },
+            { code: "6120", name: "DOG CHOW ADULTO RAZA PEQUEÑA X 20", category: "ALIMENTOS", price: 63100.00 },
+            { code: "6029", name: "DOG CHOW ADULTO X 20", category: "ALIMENTOS", price: 59700.00 },
+            { code: "4178", name: "DOG CHOW CACHORRO R/PEQ X 21", category: "ALIMENTOS", price: 71500.00 },
+            { code: "4169", name: "DOG CHOW CACHORRO X 21", category: "ALIMENTOS", price: 68300.00 },
+            { code: "5269", name: "DOGUI ADULTO X 21", category: "ALIMENTOS", price: 43400.00 },
+            { code: "6880", name: "DOGUI ADULTO X 8", category: "ALIMENTOS", price: 19500.00 },
+            { code: "E16", name: "EXCELLENT ADULTO R/P X 15", category: "ALIMENTOS", price: 74600.00 },
+            { code: "E02", name: "EXCELLENT FORMULA ADULTO X 20", category: "ALIMENTOS", price: 64900.00 },
+            { code: "E13", name: "EXCELLENT FORMULA CACHORRO X 20", category: "ALIMENTOS", price: 70100.00 },
+            { code: "E09", name: "EXCELLENT GATO ADULTO X 15", category: "ALIMENTOS", price: 124200.00 },
+            { code: "PRO5", name: "PROPLAN ADULTO R. PEQUEÑA X 3", category: "ALIMENTOS", price: 21570.00 },
+            { code: "PRO1", name: "PROPLAN CACHORRO X 3", category: "ALIMENTOS", price: 23810.07 },
+
+            // FIAMBRES Y QUESOS (Incluyendo QUESO SARDO y todos los fiambres)
+            { code: "301", name: "ARROLLADO DE CARNE PALADINI", category: "FIAMBRES", price: 30520.00 },
+            { code: "293", name: "ARROLLADO DE POLLO PALADINI", category: "FIAMBRES", price: 28910.00 },
+            { code: "G8", name: "BONDIOLA GOGGI", category: "FIAMBRES", price: 20700.00 },
+            { code: "10116", name: "BONDIOLA PALADINI", category: "FIAMBRES", price: 27160.00 },
+            { code: "9", name: "CRESPÓN DON JUAN", category: "FIAMBRES", price: 13990.00 },
+            { code: "G7", name: "FIAMBRE DE CERDO 214", category: "FIAMBRES", price: 10180.00 },
+            { code: "1224", name: "HAMBURGUESA CLASICA PALADINI X 2", category: "FIAMBRES", price: 3140.00 },
+            { code: "1226", name: "HAMBURGUESA CLASICA PALADINI X 4", category: "FIAMBRES", price: 6970.00 },
+            { code: "10173", name: "JAMON COCIDO PALADINI", category: "FIAMBRES", price: 15860.00 },
+            { code: "G2", name: "JAMON CRUDO GOGGI NEGRO", category: "FIAMBRES", price: 23830.00 },
+            { code: "10026", name: "JAMON CRUDO PALADINI", category: "FIAMBRES", price: 42290.00 },
+            { code: "10611", name: "MILAN PALADINI", category: "FIAMBRES", price: 25655.00 },
+            { code: "1590", name: "SALAME BASTON PALADINI", category: "FIAMBRES", price: 26020.00 },
+            { code: "76", name: "QUESO BARRA DON BOSCO", category: "FIAMBRES", price: 10920.00 },
+            { code: "9002", name: "QUESO BARRA RAMOLAC", category: "FIAMBRES", price: 10970.00 },
+            { code: "T003", name: "QUESO BARRA TREGAR", category: "FIAMBRES", price: 13020.00 },
+            { code: "583", name: "QUESO BARRA TREMBLAY", category: "FIAMBRES", price: 11700.00 },
+            { code: "2752", name: "QUESO CHEDDAR FETAS MILKAUT X 192", category: "FIAMBRES", price: 41000.00 },
+            { code: "75", name: "QUESO CREMOSO DON BOSCO", category: "FIAMBRES", price: 8580.00 },
+            { code: "9018", name: "QUESO CREMOSO RAMOLAC", category: "FIAMBRES", price: 8420.00 },
+            { code: "3264", name: "QUESO CREMOSO TREGAR", category: "FIAMBRES", price: 10980.00 },
+            { code: "0195", name: "QUESO CRIOLLO TREGAR", category: "FIAMBRES", price: 16650.00 },
+            { code: "3268", name: "QUESO CUARTIROLO TREMBLAY", category: "FIAMBRES", price: 9000.00 },
+            { code: "4369", name: "QUESO FONTINA TREGAR", category: "FIAMBRES", price: 17590.00 },
+            { code: "0061", name: "QUESO HOLANDO EL JUMIAL", category: "FIAMBRES", price: 15342.00 },
+            { code: "3077", name: "QUESO MUZARELLA EL JUAN", category: "FIAMBRES", price: 10060.00 },
+            { code: "1097", name: "QUESO MUZARELLA TREGAR", category: "FIAMBRES", price: 12800.00 },
+            { code: "79", name: "QUESO POR SALUT DON BOSCO", category: "FIAMBRES", price: 10790.00 },
+            { code: "0436", name: "QUESO PROVOLONE QUESERA", category: "FIAMBRES", price: 21360.00 },
+            { code: "M1628", name: "QUESO PROVOLONE STA ROSA", category: "FIAMBRES", price: 34050.00 },
+            { code: "077", name: "QUESO RALLADO LA QUESERA X 40", category: "FIAMBRES", price: 710.00 },
+            { code: "3891", name: "QUESO RALLADO MILKAUT X 40", category: "FIAMBRES", price: 1530.00 },
+            { code: "458", name: "QUESO RALLADO TREGAR X 40", category: "FIAMBRES", price: 1120.00 },
+            { code: "17", name: "QUESO REGIANITO TREGAR", category: "FIAMBRES", price: 19790.00 },
+            { code: "1417", name: "QUESO ROQUEFOR LA QUESERA", category: "FIAMBRES", price: 16850.00 },
+            { code: "211", name: "QUESO ROQUEFOR TREGAR", category: "FIAMBRES", price: 19880.00 },
+            { code: "2833", name: "QUESO ROQUEFORT BAVARIA", category: "FIAMBRES", price: 21900.00 },
+            { code: "78", name: "QUESO SARDO DON JORGE", category: "FIAMBRES", price: 10000.00 },
+            { code: "6389", name: "QUESO SARDO ESTACIONADO DB", category: "FIAMBRES", price: 17330.00 },
+
+            // ARTÍCULOS DE ALMACÉN
+            { code: "0688", name: "ACEITUNA 000 X 100 PRINCETON", category: "ALMACEN", price: 750.00 },
+            { code: "0985", name: "ACEITUNA DESC CIMINO X 5", category: "ALMACEN", price: 32500.00 },
+            { code: "0257", name: "ACEITUNA NEGRA MARVAVIC N° 1 X 5", category: "ALMACEN", price: 49600.00 },
+            { code: "0178", name: "ARROZ TIO CARLOS L.FINO X 500", category: "ALMACEN", price: 810.00 },
+            { code: "166", name: "ARVEJAS INALPA", category: "ALMACEN", price: 540.00 },
+            { code: "2013", name: "ATUN DEZMENUZADO BAHIA 170", category: "ALMACEN", price: 1360.00 },
+            { code: "9492", name: "ATUN LOMO BAHIA X 170", category: "ALMACEN", price: 2790.00 },
+            { code: "088", name: "AZUCAR CHANGO SOBRE X 1000", category: "ALMACEN", price: 20450.00 },
+            { code: "8031", name: "AZUCAR CHANGO X 1", category: "ALMACEN", price: 1478.00 },
+            { code: "9259", name: "HARINA CAÑUELAS 000 X 1", category: "ALMACEN", price: 960.00 },
+            { code: "096", name: "HARINA PUREZA 0000 X 1", category: "ALMACEN", price: 1280.00 },
+            { code: "5125", name: "ACEITE GIRASOL X 900", category: "ALMACEN", price: 2500.00 },
+            { code: "1639", name: "ACEITE NATURA X 900", category: "ALMACEN", price: 4960.00 },
+            { code: "102", name: "ACEITE GIRASOL CAÑUELAS X 900", category: "ALMACEN", price: 4425.00 },
+            { code: "2486", name: "CREMA DE LECHE MILKAUT X 200CC", category: "ALMACEN", price: 2430.00 },
+            { code: "T006", name: "CREMA DE LECHE TREGAR X 200", category: "ALMACEN", price: 1940.00 },
+            { code: "2279", name: "LECHE CHOCO MILKAUT X 200", category: "ALMACEN", price: 910.00 },
+            { code: "M2294", name: "LECHE MILKAUT DESC", category: "ALMACEN", price: 2070.00 },
+            { code: "T005", name: "LECHE TREGAR DESC", category: "ALMACEN", price: 1800.00 },
+            { code: "1124", name: "MANTECA MILKAUT X 200", category: "ALMACEN", price: 3470.00 },
+            { code: "1022", name: "MANTECA PRIMER PREMIO X 200", category: "ALMACEN", price: 2950.00 },
+            { code: "B3", name: "FIDEOS DON BERNABEU TIRABUZON", category: "ALMACEN", price: 750.00 },
+            { code: "D1", name: "FIDEOS DON BERNABEU MOSTACHOL", category: "ALMACEN", price: 750.00 },
+            { code: "D2", name: "FIDEOS DON BERNABEU TALLARIN", category: "ALMACEN", price: 750.00 },
+
+            // CONDIMENTOS Y ESPECIAS (Dentro de Almacén)
+            { code: "36001", name: "AJI MOLIDO X 25 GRS", category: "ALMACEN", price: 460.00 },
+            { code: "M205", name: "AJI MOLIDO REINA MORA X 1 KILO", category: "ALMACEN", price: 11350.00 },
+            { code: "36381", name: "ALMIDON DE MAIZ X 400 REINA MORA", category: "ALMACEN", price: 1550.00 },
+            { code: "36601", name: "BICARBONATO DE SODIO X 25 GRS", category: "ALMACEN", price: 195.00 },
+            { code: "36101", name: "CANELA MOLIDA REINA MORA X 25", category: "ALMACEN", price: 635.00 },
+            { code: "36821", name: "COCO RALLADO X 25 GRS", category: "ALMACEN", price: 465.00 },
+            { code: "36122", name: "COMINO MOLIDO REINA MORA X 25 GRS", category: "ALMACEN", price: 550.00 },
+            { code: "M267", name: "OREGANO REINA MORA X 1 KILO", category: "ALMACEN", price: 9120.00 },
+            { code: "36301", name: "OREGANO REINA MORA X 25 GRS", category: "ALMACEN", price: 430.00 },
+            { code: "36241", name: "PIMENTON REINA MORA X 25 GRS", category: "ALMACEN", price: 430.00 },
+            { code: "M271", name: "PIMENTON REINA MORA X 1 KILO", category: "ALMACEN", price: 12040.00 },
+
+            // ARTÍCULOS DE LIMPIEZA
+            { code: "2102", name: "AUTOBRILLO LIQ PARA PISO ORLEP X 1", category: "LIMPIEZA", price: 3575.00 },
+            { code: "9951", name: "BOLSA CONSORCIO 50 X 70", category: "LIMPIEZA", price: 700.00 },
+            { code: "6662", name: "BOLSA CONSORCIO 80 X 110", category: "LIMPIEZA", price: 1720.00 },
+            { code: "9866", name: "CIF CREMOSO X 375", category: "LIMPIEZA", price: 2630.00 },
+            { code: "5814", name: "CIF CREMOSO X 750", category: "LIMPIEZA", price: 4800.00 },
+            { code: "1036", name: "DESODORANTE DE AMBIENTE POETT", category: "LIMPIEZA", price: 3050.00 },
+            { code: "2453", name: "ESPIRALES RAID X 12", category: "LIMPIEZA", price: 2150.00 },
+            { code: "8141", name: "HARPIC POWER PLUS X 500 ML", category: "LIMPIEZA", price: 5030.00 },
+            { code: "6001", name: "LIQUIDO PISO POETT X 900", category: "LIMPIEZA", price: 1770.00 },
+            { code: "7689", name: "LIQUIDO PISO PROCENEX X 5", category: "LIMPIEZA", price: 9890.00 },
+            { code: "6609", name: "LIQUIDO PISO PROCENEX X 900", category: "LIMPIEZA", price: 1840.00 },
+            { code: "8902", name: "LUSTRAMUEBLES BLEM", category: "LIMPIEZA", price: 5200.00 },
+            { code: "0088", name: "PASTILLA HARPIC MOCHILA", category: "LIMPIEZA", price: 4950.00 },
+            { code: "1044", name: "LAVANDINA AYUDIN X 1", category: "LIMPIEZA", price: 1330.00 },
+            { code: "6003", name: "LAVANDINA AYUDIN X 2", category: "LIMPIEZA", price: 2090.00 },
+            { code: "0311", name: "LAVAVAJILLA CIF X 300", category: "LIMPIEZA", price: 2720.00 },
+            { code: "9513", name: "LAVAVAJILLA MAGISTRAL X 225", category: "LIMPIEZA", price: 1900.00 },
+            { code: "9507", name: "LAVAVAJILLA MAGISTRAL X 500", category: "LIMPIEZA", price: 3730.00 },
+
+            // PERFUMERÍA Y ARTÍCULOS
+            { code: "0947", name: "ACONDICIONADOR PLUSBELLE X 1", category: "PERFUMERIA", price: 3600.00 },
+            { code: "4333", name: "ALCOHOL PORTA X 250", category: "PERFUMERIA", price: 1225.00 },
+            { code: "4341", name: "ALCOHOL PORTA X 500", category: "PERFUMERIA", price: 2520.00 },
+            { code: "6349", name: "DENTRIFICO COLGATE X 70", category: "PERFUMERIA", price: 2185.00 },
+            { code: "1025", name: "MAQUINA PRESTOBARBA 3 FILOS", category: "PERFUMERIA", price: 1950.00 },
+            { code: "1105", name: "REPELENTE OFF AEROSOL X 165", category: "PERFUMERIA", price: 5300.00 },
+            { code: "1139", name: "REPELENTE OFF CREMA", category: "PERFUMERIA", price: 2670.00 },
+            { code: "0946", name: "SHAMPO PLUSBELLE X 1", category: "PERFUMERIA", price: 3600.00 },
+            { code: "2008", name: "CEPILLO DENTAL COLGATE", category: "PERFUMERIA", price: 1250.00 },
+            { code: "4245", name: "CREMA HINDS X 125", category: "PERFUMERIA", price: 2460.00 }
+        ];
+
+        let currentCategory = 'TODOS';
+        let cart = {}; // { productCode: quantity }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderProducts(products);
+        });
+
+        function setCategory(category) {
+            currentCategory = category;
+            
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                const btnText = btn.textContent.toLowerCase();
+                let matches = false;
+                if (category === 'TODOS' && btnText.includes('todos')) matches = true;
+                if (category === 'ALIMENTOS' && btnText.includes('alimentos')) matches = true;
+                if (category === 'FIAMBRES' && btnText.includes('fiambres')) matches = true;
+                if (category === 'ALMACEN' && btnText.includes('almacén')) matches = true;
+                if (category === 'LIMPIEZA' && btnText.includes('limpieza')) matches = true;
+                if (category === 'PERFUMERIA' && btnText.includes('perfumería')) matches = true;
+
+                if(matches) {
+                    btn.className = "category-btn active px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap bg-brand-600 text-white shadow-sm transition";
+                } else {
+                    btn.className = "category-btn px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200 transition";
+                }
+            });
+
+            filterProducts();
+        }
+
+        function filterProducts() {
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+            
+            const filtered = products.filter(p => {
+                const matchesCategory = currentCategory === 'TODOS' || p.category === currentCategory;
+                const matchesQuery = p.name.toLowerCase().includes(query) || p.code.toLowerCase().includes(query);
+                return matchesCategory && matchesQuery;
+            });
+
+            renderProducts(filtered);
+        }
+
+        function renderProducts(items) {
+            const grid = document.getElementById('product-grid');
+            const emptyState = document.getElementById('empty-state');
+            
+            grid.innerHTML = '';
+            
+            if (items.length === 0) {
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+                return;
+            } else {
+                emptyState.classList.remove('flex');
+                emptyState.classList.add('hidden');
+            }
+
+            items.forEach(product => {
+                const qty = cart[product.code] || 0;
+                const card = document.createElement('div');
+                card.className = "bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-brand-300 transition duration-200";
+                
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md">${product.category}</span>
+                            <span class="text-xs text-slate-400 font-mono">#${product.code}</span>
+                        </div>
+                        <h3 class="font-semibold text-slate-800 text-sm mb-2 line-clamp-2">${product.name}</h3>
+                    </div>
+                    <div>
+                        <div class="text-lg font-black text-slate-900 mb-3">$${product.price.toLocaleString('es-AR', {minimumFractionDigits: 2})}</div>
+                        
+                        ${qty === 0 ? `
+                            <button onclick="updateQuantity('${product.code}', 1)" class="w-full bg-slate-900 hover:bg-brand-600 text-white font-medium py-2 rounded-xl text-sm transition flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-plus text-xs"></i>
+                                <span>Agregar</span>
+                            </button>
+                        ` : `
+                            <div class="flex items-center justify-between bg-slate-100 rounded-xl p-1">
+                                <button onclick="updateQuantity('${product.code}', -1)" class="w-8 h-8 bg-white hover:bg-red-50 hover:text-red-600 rounded-lg shadow-sm font-bold flex items-center justify-center transition">
+                                    <i class="fa-solid fa-minus text-xs"></i>
+                                </button>
+                                <span class="font-bold text-slate-800 text-sm px-3">${qty}</span>
+                                <button onclick="updateQuantity('${product.code}', 1)" class="w-8 h-8 bg-white hover:bg-brand-50 hover:text-brand-600 rounded-lg shadow-sm font-bold flex items-center justify-center transition">
+                                    <i class="fa-solid fa-plus text-xs"></i>
+                                </button>
+                            </div>
+                        `}
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function updateQuantity(code, delta) {
+            const current = cart[code] || 0;
+            const updated = current + delta;
+            
+            if (updated <= 0) {
+                delete cart[code];
+            } else {
+                cart[code] = updated;
+            }
+
+            filterProducts();
+            updateCartUI();
+
+            if (delta > 0 && current === 0) {
+                showToast("Producto agregado al pedido");
+            }
+        }
+
+        function updateCartUI() {
+            const codes = Object.keys(cart);
+            const totalCount = codes.reduce((acc, code) => acc + cart[code], 0);
+            
+            const badge = document.getElementById('cart-badge');
+            if (totalCount > 0) {
+                badge.textContent = totalCount;
+                badge.classList.remove('hidden');
+                document.getElementById('floating-cart').classList.remove('translate-y-full');
+            } else {
+                badge.classList.add('hidden');
+                document.getElementById('floating-cart').classList.add('translate-y-full');
+            }
+
+            const container = document.getElementById('cart-items-container');
+            container.innerHTML = '';
+
+            let grandTotal = 0;
+
+            if (codes.length === 0) {
+                container.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-slate-400 py-12">
+                        <i class="fa-solid fa-cart-arrow-down text-3xl mb-2"></i>
+                        <p class="text-sm">El pedido está vacío</p>
+                    </div>
+                `;
+            } else {
+                codes.forEach(code => {
+                    const product = products.find(p => p.code === code);
+                    const qty = cart[code];
+                    const subtotal = product.price * qty;
+                    grandTotal += subtotal;
+
+                    const itemEl = document.createElement('div');
+                    itemEl.className = "py-3 flex items-center justify-between";
+                    itemEl.innerHTML = `
+                        <div class="flex-1 pr-2">
+                            <h4 class="text-xs font-semibold text-slate-800 line-clamp-1">${product.name}</h4>
+                            <p class="text-xs text-slate-500 font-mono">$${product.price.toLocaleString('es-AR')} x ${qty}</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="font-bold text-sm text-slate-900">$${subtotal.toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>
+                            <button onclick="removeFromCart('${code}')" class="text-slate-400 hover:text-red-500 transition p-1">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(itemEl);
+                });
+            }
+
+            document.getElementById('cart-total').textContent = `$${grandTotal.toLocaleString('es-AR', {minimumFractionDigits: 2})}`;
+            document.getElementById('mobile-total').textContent = `$${grandTotal.toLocaleString('es-AR', {minimumFractionDigits: 2})}`;
+        }
+
+        function removeFromCart(code) {
+            delete cart[code];
+            filterProducts();
+            updateCartUI();
+        }
+
+        function clearCart() {
+            cart = {};
+            filterProducts();
+            updateCartUI();
+            showToast("Pedido vaciado");
+        }
+
+        function toggleCartModal(open) {
+            const modal = document.getElementById('cart-modal');
+            const drawer = document.getElementById('cart-drawer');
+            
+            if (open) {
+                modal.classList.remove('hidden');
+                setTimeout(() => drawer.classList.remove('translate-x-full'), 10);
+            } else {
+                drawer.classList.add('translate-x-full');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            }
+        }
+
+        function shareWhatsApp() {
+            const clientName = document.getElementById('client-name').value.trim() || "Cliente del Depósito";
+            const codes = Object.keys(cart);
+            
+            if (codes.length === 0) {
+                showToast("El pedido está vacío");
+                return;
+            }
+
+            let message = `🛒 *NUEVO PEDIDO - DEPÓSITO*\n`;
+            message += `👤 *Cliente:* ${clientName}\n`;
+            message += `📅 *Fecha:* 15/08/2026\n`;
+            message += `-----------------------------------\n\n`;
+
+            let grandTotal = 0;
+            codes.forEach((code, index) => {
+                const product = products.find(p => p.code === code);
+                const qty = cart[code];
+                const subtotal = product.price * qty;
+                grandTotal += subtotal;
+                message += `${index + 1}. *${product.name}*\n`;
+                message += `   Código: ${code} | Cant: *${qty}* | Sub: $${subtotal.toLocaleString('es-AR', {minimumFractionDigits: 2})}\n\n`;
+            });
+
+            message += `-----------------------------------\n`;
+            message += `💰 *TOTAL GENERAL: $${grandTotal.toLocaleString('es-AR', {minimumFractionDigits: 2})}*\n`;
+
+            const encodedMessage = encodeURIComponent(message);
+            window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
+```
